@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المساعد الذكي لطلاب التمريض</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1B4B43">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Smart Nurse">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+  :root{
+    --bg:#F6F7F4; --surface:#FFFFFF; --line:#DDE3DC; --ink:#16211D; --ink-soft:#55635B;
+    --primary:#1B4B43; --primary-soft:#E6EEEB; --amber:#C98A2B; --amber-soft:#FBF1DF;
+    --alert:#A73A42; --alert-soft:#F7E7E6; --blue:#2C5F8A; --blue-soft:#E5EEF5; --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:'Cairo',sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; display:flex; justify-content:center;}
+  .phone{width:100%; max-width:430px; min-height:100vh; background:var(--bg); display:flex; flex-direction:column; position:relative; padding-bottom:78px;}
+
+  header{padding:20px 20px 16px; background:var(--primary); color:#fff; border-radius:0 0 22px 22px;}
+  header .top-row{display:flex; justify-content:space-between; align-items:flex-start;}
+  header h1{font-size:18px; font-weight:700; line-height:1.35;}
+  header .sub{font-size:12px; opacity:0.8; margin-top:3px;}
+  .lang-pill{display:flex; gap:4px; background:rgba(255,255,255,0.12); padding:4px; border-radius:20px;}
+  .lang-pill span{font-size:11px; padding:4px 9px; border-radius:16px; opacity:0.7;}
+  .lang-pill span.active{background:#fff; color:var(--primary); opacity:1; font-weight:700;}
+
+  .year-switch{display:flex; gap:6px; margin-top:14px; background:rgba(255,255,255,0.1); border-radius:12px; padding:4px;}
+  .year-switch div{flex:1; text-align:center; padding:8px 4px; font-size:12px; border-radius:9px; cursor:pointer; opacity:0.75;}
+  .year-switch div.active{background:#fff; color:var(--primary); font-weight:700; opacity:1;}
+
+  .streak{margin-top:12px; display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.1); border-radius:12px; padding:9px 14px;}
+  .streak .num{font-size:18px; font-weight:900;}
+  .streak .label{font-size:11px; opacity:0.85;}
+
+  main{padding:16px 18px 8px; flex:1;}
+  section{margin-bottom:20px;}
+  .section-title{font-size:13px; font-weight:700; color:var(--ink-soft); margin-bottom:10px;}
+
+  .preshift{background:var(--amber-soft); border:1px solid #EED9AF; border-radius:var(--radius); padding:14px; display:flex; align-items:center; gap:12px;}
+  .preshift .icon{width:38px; height:38px; border-radius:10px; background:var(--amber); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0;}
+  .preshift .txt strong{display:block; font-size:13.5px; margin-bottom:2px;}
+  .preshift .txt span{font-size:11.5px; color:var(--ink-soft);}
+
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:11px;}
+  .module{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:13px; cursor:pointer;}
+  .module:active{border-color:var(--primary);}
+  .module .m-icon{width:32px; height:32px; border-radius:9px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; font-size:15px; margin-bottom:9px;}
+  .module .m-title{font-size:13px; font-weight:700; margin-bottom:3px;}
+  .module .m-sub{font-size:10.5px; color:var(--ink-soft);}
+
+  .daily-fact{background:var(--primary); color:#fff; border-radius:var(--radius); padding:15px;}
+  .daily-fact .tag{font-size:11px; opacity:0.75; margin-bottom:6px;}
+  .daily-fact p{font-size:13px; line-height:1.6;}
+
+  nav{position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px; background:var(--surface); border-top:1px solid var(--line); display:flex; justify-content:space-around; padding:9px 4px 13px;}
+  nav .nav-item{display:flex; flex-direction:column; align-items:center; gap:3px; font-size:9.5px; color:var(--ink-soft); cursor:pointer; flex:1;}
+  nav .nav-item .ic{font-size:18px;}
+  nav .nav-item.active{color:var(--primary); font-weight:700;}
+
+  .screen{display:none;} .screen.active{display:block;}
+  .back-header{display:flex; align-items:center; gap:10px; padding:18px 18px 4px;}
+  .back-header .back-btn{width:32px; height:32px; border-radius:10px; background:var(--surface); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .back-header h2{font-size:15.5px; font-weight:700;}
+  .screen-body{padding:14px 18px;}
+
+  .search-box{margin:0 0 12px;}
+  .search-box input{width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:var(--surface); font-family:'Cairo'; font-size:13.5px;}
+  .term-card{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:13px; margin-bottom:9px;}
+  .term-card .fr{font-size:14px; font-weight:700; color:var(--primary);}
+  .term-card .ar{font-size:12.5px; margin-top:4px;}
+  .term-card .en{font-size:11px; color:var(--ink-soft); margin-top:4px; font-style:italic;}
+  .tag-y{display:inline-block; font-size:9.5px; background:var(--blue-soft); color:var(--blue); border-radius:6px; padding:2px 7px; margin-inline-start:6px;}
+
+  .field{margin-bottom:13px;}
+  .field label{font-size:12px; color:var(--ink-soft); display:block; margin-bottom:6px;}
+  .field input, .field select{width:100%; padding:11px 14px; border-radius:12px; border:1px solid var(--line); background:var(--surface); font-family:'Cairo'; font-size:13.5px;}
+  .result-box{background:var(--primary-soft); border-radius:14px; padding:16px; text-align:center; margin-top:14px;}
+  .result-box .val{font-size:24px; font-weight:900; color:var(--primary);}
+  .result-box .unit{font-size:11.5px; color:var(--ink-soft); margin-top:4px;}
+
+  .flash-counter{text-align:center; font-size:11.5px; color:var(--ink-soft); margin-bottom:12px;}
+  .flashcard{background:var(--surface); border:1px solid var(--line); border-radius:18px; min-height:190px; display:flex; align-items:center; justify-content:center; padding:22px; text-align:center; cursor:pointer; position:relative;}
+  .flashcard .q{font-size:15px; font-weight:700; line-height:1.5;}
+  .flashcard .a{font-size:13.5px; color:var(--primary); display:none; line-height:1.6;}
+  .flashcard.flipped .q{display:none;} .flashcard.flipped .a{display:block;}
+  .flashcard .hint{position:absolute; bottom:12px; font-size:10px; color:var(--ink-soft);}
+  .flash-nav{display:flex; gap:10px; margin-top:14px;}
+  .flash-nav button{flex:1; padding:11px; border-radius:12px; border:1px solid var(--line); background:var(--surface); font-family:'Cairo'; font-weight:700; font-size:12.5px; cursor:pointer;}
+  .flash-nav button.primary{background:var(--primary); color:#fff; border:none;}
+
+  .case-card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:15px; margin-bottom:12px;}
+  .case-card .vignette{font-size:13px; line-height:1.6; margin-bottom:12px;}
+  .opt{padding:11px; border:1px solid var(--line); border-radius:10px; font-size:12.5px; margin-bottom:8px; cursor:pointer;}
+  .opt.correct{background:var(--primary-soft); border-color:var(--primary); font-weight:700;}
+  .opt.wrong{background:var(--alert-soft); border-color:var(--alert);}
+  .explain{font-size:12px; color:var(--ink-soft); margin-top:8px; display:none; line-height:1.6;}
+
+  .protocol-card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:10px; cursor:pointer;}
+  .protocol-card .p-title{font-size:13.5px; font-weight:700; display:flex; justify-content:space-between;}
+  .protocol-steps{display:none; margin-top:10px; font-size:12px; color:var(--ink-soft); line-height:2;}
+  .protocol-card.open .protocol-steps{display:block;}
+
+  .vs-table{width:100%; border-collapse:collapse; font-size:12px;}
+  .vs-table th{text-align:right; background:var(--primary-soft); padding:9px; font-size:11px;}
+  .vs-table td{padding:9px; border-bottom:1px solid var(--line);}
+  .vs-alert{color:var(--alert); font-weight:700;}
+
+  .check-service{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px;}
+  .check-service h3{font-size:13.5px; margin-bottom:10px;}
+  .check-item{display:flex; align-items:center; gap:9px; padding:7px 0; font-size:12.5px;}
+  .check-item input{width:17px; height:17px;}
+
+  .stage-service{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px;}
+  .stage-service h3{font-size:13.5px; margin-bottom:6px;}
+  .stage-service .obj{font-size:11.5px; color:var(--ink-soft); margin-bottom:8px;}
+  .progress-bar{height:7px; background:var(--primary-soft); border-radius:5px; overflow:hidden;}
+  .progress-bar div{height:100%; background:var(--primary);}
+
+  .video-card{display:flex; gap:12px; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:12px; margin-bottom:10px; cursor:pointer;}
+  .video-thumb{width:64px; height:48px; border-radius:9px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;}
+  .video-info .v-title{font-size:12.5px; font-weight:700;}
+  .video-info .v-sub{font-size:11px; color:var(--ink-soft); margin-top:3px;}
+
+  .plan-item{display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:9px;}
+  .plan-item .p-name{font-size:12.5px; font-weight:700;}
+  .plan-item .p-time{font-size:11px; color:var(--ink-soft);}
+  .badge-due{background:var(--alert-soft); color:var(--alert); font-size:10px; padding:3px 8px; border-radius:8px;}
+
+  .timer-wrap{display:flex; justify-content:center; margin-bottom:16px;}
+  .timer-ring{width:76px; height:76px; border-radius:50%; background:conic-gradient(var(--primary) var(--pct,100%), var(--primary-soft) 0); display:flex; align-items:center; justify-content:center; transition:background .2s linear;}
+  .timer-ring span{width:62px; height:62px; border-radius:50%; background:var(--surface); display:flex; align-items:center; justify-content:center; font-weight:900; font-size:18px;}
+  .timer-ring.urgent span{color:var(--alert);}
+  .sc-score{display:flex; justify-content:center; gap:18px; margin-bottom:14px; font-size:12px; color:var(--ink-soft);}
+  .sc-score b{color:var(--ink); font-size:14px;}
+  .sc-result{text-align:center; font-size:13px; font-weight:700; margin-top:10px; display:none;}
+  .sc-result.correct{color:var(--primary);}
+  .sc-result.wrong{color:var(--alert);}
+  .sc-startcard{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; text-align:center;}
+  .sc-startcard p{font-size:12.5px; color:var(--ink-soft); line-height:1.7; margin:10px 0 16px;}
+  .sc-startcard button{background:var(--primary); color:#fff; border:none; padding:12px 26px; border-radius:12px; font-family:'Cairo'; font-weight:700; font-size:13px; cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="phone">
+
+<!-- HOME -->
+<div class="screen active" id="screen-home">
+  <header>
+    <div class="top-row">
+      <div>
+        <h1>مرحباً، يا طالب التمريض 👋</h1>
+        <div class="sub" id="yearLabel">السنة الأولى · INFSPM</div>
+      </div>
+      <div class="lang-pill"><span class="active">ع</span><span>FR</span><span>EN</span></div>
+    </div>
+    <div class="year-switch">
+      <div class="active" data-y="1" onclick="setYear(1)">السنة 1</div>
+      <div data-y="2" onclick="setYear(2)">السنة 2</div>
+      <div data-y="3" onclick="setYear(3)">السنة 3</div>
+    </div>
+    <div class="streak"><div class="num">🔥 6</div><div class="label">أيام متتالية من المراجعة</div></div>
+  </header>
+
+  <main>
+    <section>
+      <div class="preshift">
+        <div class="icon">⏱️</div>
+        <div class="txt"><strong>مراجعة سريعة قبل الشفت</strong><span>تربص مصلحة الاستعجالات يبدأ خلال ساعتين</span></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">أدواتك</div>
+      <div class="grid">
+        <div class="module" onclick="showScreen('glossary')"><div class="m-icon">📖</div><div class="m-title">القاموس الطبي</div><div class="m-sub">FR · AR · EN</div></div>
+        <div class="module" onclick="showScreen('calculator')"><div class="m-icon">💊</div><div class="m-title">حاسبة الجرعات</div><div class="m-sub">Dose Calculator</div></div>
+        <div class="module" onclick="showScreen('protocols')"><div class="m-icon">🧾</div><div class="m-title">بروتوكولات العناية</div><div class="m-sub">Procédures</div></div>
+        <div class="module" onclick="showScreen('checklists')"><div class="m-icon">✅</div><div class="m-title">قوائم التحقق</div><div class="m-sub">قبل كل مصلحة</div></div>
+        <div class="module" onclick="showScreen('vitals')"><div class="m-icon">❤️</div><div class="m-title">العلامات الحيوية</div><div class="m-sub">Vital Signs</div></div>
+        <div class="module" onclick="showScreen('videos')"><div class="m-icon">🎬</div><div class="m-title">مكتبة الفيديو</div><div class="m-sub">شروحات مصورة</div></div>
+        <div class="module" onclick="showScreen('flashcards')"><div class="m-icon">🗂️</div><div class="m-title">بطاقات المراجعة</div><div class="m-sub">Flashcards</div></div>
+        <div class="module" onclick="showScreen('cases')"><div class="m-icon">🩺</div><div class="m-title">حالات سريرية</div><div class="m-sub">Cas cliniques</div></div>
+        <div class="module" onclick="showScreen('stage')"><div class="m-icon">📋</div><div class="m-title">دفتر التربص</div><div class="m-sub">Carnet de Stage</div></div>
+        <div class="module" onclick="showScreen('planner')"><div class="m-icon">🔔</div><div class="m-title">المخطط والتذكيرات</div><div class="m-sub">Spaced Repetition</div></div>
+        <div class="module" onclick="showScreen('speed')"><div class="m-icon">⚡</div><div class="m-title">تحدي السرعة</div><div class="m-sub">ما أول تصرف؟</div></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">تحدي اليوم</div>
+      <div class="daily-fact">
+        <div class="tag">Fait du jour · معلومة اليوم</div>
+        <p id="dailyFact">النطاق الطبيعي لضغط الدم الانقباضي عند البالغ هو 90-120 mmHg. أي قراءة أعلى من 140 تستدعي تبليغ الطاقم الطبي فوراً.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- GLOSSARY -->
+<div class="screen" id="screen-glossary">
+  <div class="back-header"><div class="back-btn" onclick="showScreen('home')">→</div><h2>القاموس الطبي</h2></div>
+  <div class="screen-body">
+    <div class="search-box"><input type="text" id="glossarySearch" placeholder="ابحث عن مصطلح... (مثال: perfusion)" oninput="filterGlossary()"></div>
+    <div id="glossaryList"></div>
+  </div>
+</div>
+
+<!-- CALCULATOR -->
+<div class="screen" id="screen-calculator">
+  <div class="back-header"><div class="back-btn" onclick="showScreen('home')">→</div><h2>حاسبة معدل التسريب</h2></div>
+  <div class="screen-body">
+    <div class="field"><label>حجم المحلول (ml) — Volume</label><input type="number" id="volume" placeholder="مثال: 500" oninput="calcDrip()"></div>
+    <div class="field"><label>مدة التسريب (بالساعات) — Durée</label><input type="number" id="duration" placeholder="مثال: 4" oninput="calcDrip()"></div>
+    <div class="field"><label>معامل التنقيط (gouttes/ml)</label>
+      <select id="dripFactor" onchange="calcDrip()"><option value="20">20 (عادي)</option><option value="15">15</option><option value="60">60 (micro-drip)</option></select>
+    </div>
+    <div class="result-box"><div class="val" id="dripResult">—</div><div class="unit">قطرة / دقيقة — gouttes/min</div></div>
+  </div>
+</div>
+
+<!-- PROTOCOLS -->
+<div class="screen" id="screen-protocols">
+  <div class="back-header"><div class="back-btn" onclick="showScreen('home')">→</div><h2>بروتوكولات العناية</h2></div>
+  <div class="screen-body" id="protocolsList"></div>
+</div>
+
+<!-- CHECKLISTS -->
+<div class="screen" id="screen-checklists">
+  <div class="back-header"><div class="back-btn" onclick="showScreen('home')">→</div><h2>قوائم التحقق حسب المصلحة</h2></div>
+  <div class="screen-body" id="checklistsList"></div>
+</div>
+
+<!-- VITAL SIGNS -->
+<div class="screen" id="screen-vitals">
+  <div class="back-header"><div class="back-btn" onclick="showScreen('home')">→</div><h2>دليل العلامات الحيوية</h2></div>
+  <div class="screen-body">
+    <table class="vs-table">
+      <tr><th>العلامة</th><th>النطاق الطبيعي</th><th>عند التغير</th></tr>
+      <tr><td>النبض</td><td>60–100 bpm</td><td class="vs-alert">أبلغ فوراً إن تجاوز 120</td></tr>
+      <tr><td>ضغط الدم</td><td>90/60–120/80</td><td class="vs-alert">أبلغ فوراً إن تجاوز 140/90</td></tr>
+      <tr><td>الحرارة</td><td>36.1–37.2°C</td><td class="vs-alert">حمّى فوق 38°C</td></tr>
+      <tr><td>التنفس</td><td>12–20/min</td><td class="vs-alert">أبلغ إن قل عن 10 أو زاد عن 24</td></tr>
+      <tr><td>تشبع الأكسجين</td><td>95–100%</td><td class="vs-alert">أبلغ فوراً إن قل عن 92%</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- FLASHCARDS -->
+<div class="screen" id="screen-flashcards">
+  <div class="back-header"><div class="back-btn" onclick="showScreen('home')">→</div><h2>بطاقات المراجعة</h2></div>
+  <div class="screen-body">
+    <div class="flash-counter" id="flashCounter">1 / 3</div>
+    <div class="flashcard" id="flashcard" onclick="flipCard()">
+      <div class="q" id="flashQ"></div><div class="a" id="flashA"></div>
+      <div class="hint">اضغط لقلب البطاقة</div>
+    </div>
+    <div class="flash-nav"><button onclick="prevCard()">السابق</button><button class="primary" onclick="nextCard()">التالي</button></div>
+  </div>
+</div>
+
+<!-- CLINICAL CASES -->
+<div class="screen" id="screen-cases">
+  <div class="back-header"><div class="back-btn" onclick="showScreen('home')">→</div><h2>حالات سريرية</h2></div>
+  <div class="screen-body" id="casesList"></div>
+</div>
+
+<!-- CARNET DE STAGE -->
+<div class="screen" id="screen-stage">
+  <div class="back-header"><div class="back-btn" onclick="showScreen('home')">→</div><h2>دفتر التربص الرقمي</h2></div>
+  <div class="screen-body" id="stageList"></div>
+</div>
+
+<!-- VIDEOS -->
+<div class="screen" id="screen-videos">
+  <div class="back-header"><div class="back-btn" onclick="showScreen('home')">→</div><h2>مكتبة الفيديو</h2></div>
+  <div class="screen-body" id="videosList"></div>
+</div>
+
+<!-- SPEED CHALLENGE -->
+<div class="screen" id="screen-speed">
+  <div class="back-header"><div class="back-btn" onclick="showScreen('home')">→</div><h2>تحدي السرعة</h2></div>
+  <div class="screen-body" id="speedBody"></div>
+</div>
+
+<!-- PLANNER -->
+<div class="screen" id="screen-planner">
+  <div class="back-header"><div class="back-btn" onclick="showScreen('home')">→</div><h2>المخطط الذكي والتذكيرات</h2></div>
+  <div class="screen-body" id="plannerList"></div>
+</div>
+
+<nav>
+  <div class="nav-item active" id="nav-home" onclick="showScreen('home')"><div class="ic">🏠</div><div>الرئيسية</div></div>
+  <div class="nav-item" id="nav-glossary" onclick="showScreen('glossary')"><div class="ic">📖</div><div>القاموس</div></div>
+  <div class="nav-item" id="nav-cases" onclick="showScreen('cases')"><div class="ic">🩺</div><div>حالات</div></div>
+  <div class="nav-item" id="nav-flashcards" onclick="showScreen('flashcards')"><div class="ic">🗂️</div><div>مراجعة</div></div>
+  <div class="nav-item" id="nav-stage" onclick="showScreen('stage')"><div class="ic">📋</div><div>التربص</div></div>
+</nav>
+</div>
+
+<script>
+let currentYear = 1;
+function setYear(y){
+  currentYear = y;
+  document.querySelectorAll('.year-switch div').forEach(d=>d.classList.toggle('active', +d.dataset.y===y));
+  document.getElementById('yearLabel').textContent = (y===1?'السنة الأولى':y===2?'السنة الثانية':'السنة الثالثة') + ' · INFSPM';
+  filterGlossary(); cardIndex=0; renderCard(); renderCases(); renderChecklists(); renderStage();
+}
+
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const navEl=document.getElementById('nav-'+name); if(navEl) navEl.classList.add('active');
+  if(name==='glossary') filterGlossary();
+  if(name==='protocols') renderProtocols();
+  if(name==='checklists') renderChecklists();
+  if(name==='cases') renderCases();
+  if(name==='stage') renderStage();
+  if(name==='videos') renderVideos();
+  if(name==='planner') renderPlanner();
+  if(name==='speed') { stopTimer(); renderSpeedStart(); }
+  else { stopTimer(); }
+}
+
+// ---- GLOSSARY (tagged by year, 0 = common to all years) ----
+const glossaryData = [
+  {y:0, fr:"Asepsie", ar:"التعقيم / منع التلوث", en:"Asepsis"},
+  {y:0, fr:"Posologie", ar:"الجرعة الدوائية", en:"Dosage"},
+  {y:1, fr:"Perfusion", ar:"التسريب الوريدي", en:"IV infusion"},
+  {y:1, fr:"Pansement", ar:"الضماد / التضميد", en:"Dressing"},
+  {y:1, fr:"Prélèvement sanguin", ar:"أخذ عينة دم", en:"Blood draw"},
+  {y:1, fr:"Tension artérielle", ar:"ضغط الدم", en:"Blood pressure"},
+  {y:1, fr:"Garrot", ar:"العاصبة / رباط الضغط", en:"Tourniquet"},
+  {y:2, fr:"Sonde urinaire", ar:"القسطرة البولية", en:"Urinary catheter"},
+  {y:2, fr:"Oxygénothérapie", ar:"العلاج بالأكسجين", en:"Oxygen therapy"},
+  {y:2, fr:"Glycémie capillaire", ar:"سكر الدم الشعيري", en:"Capillary blood glucose"},
+  {y:3, fr:"Réanimation", ar:"الإنعاش", en:"Resuscitation"},
+  {y:3, fr:"Trachéotomie", ar:"بضع الرغامى", en:"Tracheotomy"},
+  {y:3, fr:"Dialyse", ar:"غسيل الكلى", en:"Dialysis"},
+];
+function renderGlossary(list){
+  document.getElementById('glossaryList').innerHTML = list.map(t=>`
+    <div class="term-card"><div class="fr">${t.fr}${t.y>0?`<span class="tag-y">سنة ${t.y}</span>`:''}</div><div class="ar">${t.ar}</div><div class="en">${t.en}</div></div>`).join('');
+}
+function filterGlossary(){
+  const q=(document.getElementById('glossarySearch')?.value||'').toLowerCase();
+  const pool = glossaryData.filter(t=>t.y===0 || t.y<=currentYear);
+  renderGlossary(pool.filter(t=> t.fr.toLowerCase().includes(q)||t.ar.includes(q)||t.en.toLowerCase().includes(q)));
+}
+filterGlossary();
+
+// ---- CALCULATOR ----
+function calcDrip(){
+  const vol=parseFloat(document.getElementById('volume').value);
+  const dur=parseFloat(document.getElementById('duration').value);
+  const factor=parseFloat(document.getElementById('dripFactor').value);
+  const el=document.getElementById('dripResult');
+  el.textContent = (vol>0 && dur>0) ? ((vol*factor)/(dur*60)).toFixed(1) : '—';
+}
+
+// ---- PROTOCOLS ----
+const protocols = [
+  {title:"تحضير وإعطاء حقنة وريدية", steps:["التحقق من هوية المريض والدواء (قاعدة 5B)","غسل اليدين وارتداء القفازات","تعقيم موضع الحقن","إدخال الإبرة بزاوية مناسبة والتحقق من الرجوع الدموي","حقن الدواء ببطء ومراقبة المريض"]},
+  {title:"تغيير الضماد (Pansement)", steps:["غسل اليدين وتجهيز العدة المعقمة","إزالة الضماد القديم بلطف","تنظيف الجرح من المركز للأطراف","تطبيق الضماد الجديد المعقم","تدوين حالة الجرح في الملف"]},
+  {title:"قياس السكر الشعيري", steps:["غسل اليدين وتعقيم الإصبع","وخز جانب الإصبع بجهاز اللانسيت","وضع قطرة الدم على الشريط","قراءة النتيجة وتسجيلها","تبليغ الطبيب إن كانت خارج النطاق الطبيعي"]},
+];
+function renderProtocols(){
+  document.getElementById('protocolsList').innerHTML = protocols.map((p,i)=>`
+    <div class="protocol-card" id="proto-${i}" onclick="document.getElementById('proto-${i}').classList.toggle('open')">
+      <div class="p-title">${p.title}<span>⌄</span></div>
+      <ol class="protocol-steps">${p.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+    </div>`).join('');
+}
+
+// ---- CHECKLISTS ----
+const checklists = [
+  {service:"مصلحة الاستعجالات", items:["سماعة الطبيب وجهاز ضغط الدم","قفازات معقمة وغير معقمة","عدة الإسعافات الأولية","معرفة بروتوكول الطوارئ"]},
+  {service:"مصلحة الجراحة", items:["اللباس المعقم الكامل","التحقق من ملف المريض قبل العملية","معرفة أدوات التعقيم","قائمة التحقق قبل الجراحة (Checklist chirurgicale)"]},
+  {service:"مصلحة الأطفال", items:["معرفة الجرعات حسب الوزن","أدوات قياس مصغرة للأطفال","طريقة التعامل مع الطفل والأهل","لقاحات وجدول التطعيم"]},
+];
+function renderChecklists(){
+  document.getElementById('checklistsList').innerHTML = checklists.map(c=>`
+    <div class="check-service"><h3>${c.service}</h3>
+      ${c.items.map((it,i)=>`<label class="check-item"><input type="checkbox">${it}</label>`).join('')}
+    </div>`).join('');
+}
+
+// ---- FLASHCARDS ----
+const allCards = [
+  {y:1, q:"ما هو النطاق الطبيعي لضربات القلب عند البالغ؟", a:"60 – 100 نبضة/دقيقة (Fréquence cardiaque normale)"},
+  {y:1, q:"ما معنى مصطلح Asepsie؟", a:"مجموعة الإجراءات لمنع دخول الجراثيم — التعقيم الوقائي"},
+  {y:1, q:"ما هي الخطوة الأولى قبل أي حقنة وريدية؟", a:"غسل اليدين والتحقق من هوية المريض والدواء (5B)"},
+  {y:2, q:"ما الفرق بين القسطرة البولية الدائمة والمؤقتة؟", a:"الدائمة (à demeure) تبقى فترة طويلة، والمؤقتة تُستخدم لتفريغ المثانة مرة واحدة"},
+  {y:2, q:"متى نلجأ للعلاج بالأكسجين؟", a:"عند انخفاض تشبع الأكسجين (SpO2) عن 92% أو حسب توصية الطبيب"},
+  {y:3, q:"ما هي أولوية التدخل في بروتوكول الإنعاش القلبي الرئوي؟", a:"تأمين مجرى الهواء، التنفس، ثم الدورة الدموية (ABC)"},
+  {y:3, q:"ما هي مؤشرات الحاجة لغسيل الكلى الطارئ؟", a:"ارتفاع البوتاسيوم الحاد، الحماض الشديد، احتباس السوائل الشديد، اليوريميا"},
+];
+let cardIndex=0;
+function currentCards(){ return allCards.filter(c=>c.y===currentYear); }
+function renderCard(){
+  const cards=currentCards(); if(cards.length===0) return;
+  const c=cards[cardIndex % cards.length];
+  document.getElementById('flashQ').textContent=c.q;
+  document.getElementById('flashA').textContent=c.a;
+  document.getElementById('flashCounter').textContent=(cardIndex%cards.length+1)+' / '+cards.length;
+  document.getElementById('flashcard').classList.remove('flipped');
+}
+function flipCard(){ document.getElementById('flashcard').classList.toggle('flipped'); }
+function nextCard(){ cardIndex=(cardIndex+1)%currentCards().length; renderCard(); }
+function prevCard(){ const n=currentCards().length; cardIndex=(cardIndex-1+n)%n; renderCard(); }
+renderCard();
+
+// ---- CLINICAL CASES ----
+const clinicalCases = [
+  {y:1, vignette:"مريض يشتكي من حرارة 38.7°C ونبض 110. ما الإجراء الأول؟", options:["إعطاء خافض حرارة دون استشارة","قياس باقي العلامات الحيوية وتبليغ الممرض المسؤول","تجاهل الحالة","إعطاء مضاد حيوي"], correct:1, explain:"الأولوية هي التقييم الشامل للعلامات الحيوية وإبلاغ الطاقم قبل أي تدخل دوائي."},
+  {y:2, vignette:"مريض سكري يظهر عليه تعرق وارتجاف ورفض الأكل. القراءة 0.55 g/L. ما التشخيص المرجح؟", options:["ارتفاع السكر", "نقص السكر في الدم (Hypoglycémie)", "جفاف", "حمى"], correct:1, explain:"الأعراض (تعرق، ارتجاف) مع قراءة منخفضة تشير لنقص السكر، يُعطى سكر سريع الامتصاص فوراً."},
+  {y:3, vignette:"مريض فاقد للوعي، لا يتنفس، لا نبض له. ما أول خطوة؟", options:["الاتصال بالأهل", "بدء الإنعاش القلبي الرئوي (RCP) وطلب المساعدة", "الانتظار", "قياس الحرارة"], correct:1, explain:"في توقف القلب التنفسي، بدء RCP فوراً مع طلب المساعدة أولوية قصوى."},
+];
+function renderCases(){
+  const list = clinicalCases.filter(c=>c.y===currentYear);
+  document.getElementById('casesList').innerHTML = list.map((c,ci)=>`
+    <div class="case-card">
+      <div class="vignette">${c.vignette}</div>
+      ${c.options.map((o,oi)=>`<div class="opt" onclick="answerCase(this,${ci},${oi})">${o}</div>`).join('')}
+      <div class="explain" id="explain-${ci}">${c.explain}</div>
+    </div>`).join('');
+}
+function answerCase(el, ci, oi){
+  const c = clinicalCases.filter(x=>x.y===currentYear)[ci];
+  const opts = el.parentElement.querySelectorAll('.opt');
+  opts.forEach((o,i)=>{ o.classList.remove('correct','wrong'); if(i===c.correct) o.classList.add('correct'); });
+  if(oi!==c.correct) el.classList.add('wrong');
+  document.getElementById('explain-'+ci).style.display='block';
+}
+
+// ---- CARNET DE STAGE ----
+const stageData = [
+  {y:1, service:"مصلحة الطب الباطني", done:3, total:6, obj:"إتقان قياس العلامات الحيوية والتواصل مع المريض"},
+  {y:2, service:"مصلحة الجراحة", done:2, total:8, obj:"المشاركة في التحضير قبل الجراحة وتضميد الجروح"},
+  {y:3, service:"مصلحة الاستعجالات والإنعاش", done:1, total:10, obj:"التعامل مع الحالات الحرجة وبروتوكولات RCP"},
+];
+function renderStage(){
+  const list = stageData.filter(s=>s.y===currentYear);
+  document.getElementById('stageList').innerHTML = (list.length? list : stageData).map(s=>`
+    <div class="stage-service">
+      <h3>${s.service}</h3>
+      <div class="obj">${s.obj}</div>
+      <div class="progress-bar"><div style="width:${(s.done/s.total*100)}%"></div></div>
+      <div style="font-size:11px; color:var(--ink-soft); margin-top:6px;">${s.done} / ${s.total} أهداف مُنجزة</div>
+    </div>`).join('');
+}
+
+// ---- VIDEOS ----
+const videos = [
+  {title:"تحضير حقنة وريدية خطوة بخطوة", dur:"4:12"},
+  {title:"تقنية تغيير الضماد المعقم", dur:"3:30"},
+  {title:"استخدام جهاز قياس الأكسجين", dur:"2:05"},
+];
+function renderVideos(){
+  document.getElementById('videosList').innerHTML = videos.map(v=>`
+    <div class="video-card" onclick="alert('سيتم تشغيل الفيديو في النسخة الكاملة')">
+      <div class="video-thumb">▶️</div>
+      <div class="video-info"><div class="v-title">${v.title}</div><div class="v-sub">${v.dur} · فيديو تعليمي</div></div>
+    </div>`).join('');
+}
+
+// ---- PLANNER ----
+const plannerItems = [
+  {name:"مراجعة Pharmacologie", time:"اليوم، 18:00", due:true},
+  {name:"تحدي اليوم", time:"اليوم، 08:00", due:false},
+  {name:"مراجعة قبل شفت الاستعجالات", time:"غداً، 06:30", due:false},
+  {name:"إعادة بطاقات Anatomie (تكرار متباعد)", time:"بعد يومين", due:false},
+];
+function renderPlanner(){
+  document.getElementById('plannerList').innerHTML = plannerItems.map(p=>`
+    <div class="plan-item"><div><div class="p-name">${p.name}</div><div class="p-time">${p.time}</div></div>${p.due?'<span class="badge-due">مستحق الآن</span>':''}</div>`).join('');
+}
+
+// ---- SPEED CHALLENGE ----
+const speedScenarios = [
+  {y:1, time:15, scenario:"مريض سقط أرضاً وهو واعٍ ويشتكي ألم شديد بالساق ولا يقدر يتحرك. ما أول تصرف؟", options:["تحريكه فوراً لسرير قريب","تثبيت الساق ومنعه من الحركة وطلب المساعدة","إعطاؤه مسكّن دون استشارة","تجاهل الألم وتسجيل الملاحظة لاحقاً"], correct:1, explain:"الشك بكسر يستوجب التثبيت أولاً لمنع تفاقم الإصابة، ثم طلب تقييم طبي."},
+  {y:1, time:15, scenario:"لاحظت أن كيس المحلول الوريدي فارغ تقريباً والدم بدأ يرتجع بالأنبوب. ما أول تصرف؟", options:["الانتظار حتى ينتهي تماماً","إغلاق التسريب فوراً ثم تبديل الكيس","ترك الأمر للممرض التالي","زيادة سرعة التنقيط"], correct:1, explain:"إغلاق التسريب فوراً يمنع رجوع الدم للخط ويحافظ على سلامة الوريد قبل التبديل."},
+  {y:2, time:12, scenario:"مريض سكري بدأ يتعرق بغزارة ويرتجف ولسانه ثقيل أثناء الكلام. ما أول تصرف؟", options:["قياس السكر الشعيري فوراً","إعطاؤه ماء بارد","تركه يرتاح دون تدخل","الاتصال بالأهل أولاً"], correct:0, explain:"الأعراض تشير لاحتمال نقص سكر حاد — القياس الفوري يحدد التدخل الصحيح مباشرة."},
+  {y:2, time:12, scenario:"مريض بعد عملية جراحية يشتكي ضيق تنفس مفاجئ وزرقة بالشفاه. ما أول تصرف؟", options:["تسجيل الملاحظة في الملف فقط","رفع رأس السرير، قياس التشبع الأكسجيني، وتبليغ الطبيب فوراً","الانتظار 10 دقائق لمراقبة التطور","إعطاء ماء ليشرب"], correct:1, explain:"ضيق التنفس المفاجئ بعد الجراحة علامة إنذار — يستوجب تدخلاً وتبليغاً فورياً بلا تأخير."},
+  {y:3, time:10, scenario:"مريض وُجد فاقداً للوعي، لا حركة صدر، لا استجابة للنداء. ما أول تصرف؟", options:["البحث عن ملفه الطبي", "التحقق من الاستجابة والتنفس ثم طلب المساعدة وبدء RCP", "الانتظار حتى يصل الطبيب", "قياس الحرارة"], correct:1, explain:"في الاشتباه بتوقف القلب التنفسي: تحقق-نادِ للمساعدة-ابدأ الإنعاش فوراً، كل ثانية مهمة."},
+  {y:3, time:10, scenario:"مريض غسيل كلى يشتكي فجأة تشنجات وارتباك ذهني أثناء الجلسة. ما أول تصرف؟", options:["إكمال الجلسة كما هي", "إيقاف الجلسة وتنبيه الطبيب المناوب فوراً", "زيادة سرعة الترشيح", "تجاهل الأعراض لأنها شائعة"], correct:1, explain:"هذه أعراض قد تدل على اختلال حاد بالسوائل/الأملاح — إيقاف الجلسة والتبليغ الفوري أولوية."},
+];
+let speedTimer=null, speedTimeLeft=0, speedTotal=0, speedScore=0, speedAnswered=0, speedIdx=0, speedQueue=[];
+
+function renderSpeedStart(){
+  document.getElementById('speedBody').innerHTML = `
+    <div class="sc-startcard">
+      <div style="font-size:34px;">⚡</div>
+      <p>سيناريوهات سريعة، لكل واحد وقت محدود لاختيار "أول تصرف صحيح". الهدف تدريب سرعة اتخاذ القرار السريري الصحيح — مخصص لـ السنة ${currentYear}.</p>
+      <button onclick="startSpeedRound()">ابدأ التحدي</button>
+    </div>`;
+}
+function startSpeedRound(){
+  speedQueue = speedScenarios.filter(s=>s.y===currentYear);
+  if(speedQueue.length===0) speedQueue = speedScenarios.filter(s=>s.y===1);
+  speedIdx=0; speedScore=0; speedAnswered=0;
+  showSpeedQuestion();
+}
+function showSpeedQuestion(){
+  if(speedIdx>=speedQueue.length){ showSpeedResults(); return; }
+  const s=speedQueue[speedIdx];
+  speedTimeLeft=s.time; speedTotal=s.time;
+  document.getElementById('speedBody').innerHTML = `
+    <div class="sc-score">سؤال <b>${speedIdx+1}</b> / ${speedQueue.length} &nbsp;·&nbsp; نقاط <b id="scLive">${speedScore}</b></div>
+    <div class="timer-wrap"><div class="timer-ring" id="timerRing" style="--pct:100%"><span id="timerNum">${s.time}</span></div></div>
+    <div class="case-card">
+      <div class="vignette">${s.scenario}</div>
+      <div id="speedOptions">${s.options.map((o,oi)=>`<div class="opt" onclick="answerSpeed(${oi})">${o}</div>`).join('')}</div>
+      <div class="sc-result" id="scResult"></div>
+    </div>`;
+  clearInterval(speedTimer);
+  speedTimer = setInterval(()=>{
+    speedTimeLeft--;
+    const ring=document.getElementById('timerRing'), num=document.getElementById('timerNum');
+    if(!ring) return;
+    ring.style.setProperty('--pct', (speedTimeLeft/speedTotal*100)+'%');
+    num.textContent = speedTimeLeft;
+    if(speedTimeLeft<=Math.ceil(speedTotal*0.3)) ring.classList.add('urgent');
+    if(speedTimeLeft<=0){ clearInterval(speedTimer); answerSpeed(-1); }
+  }, 1000);
+}
+function stopTimer(){ clearInterval(speedTimer); }
+function answerSpeed(oi){
+  clearInterval(speedTimer);
+  const s=speedQueue[speedIdx];
+  const opts=document.querySelectorAll('#speedOptions .opt');
+  opts.forEach((o,i)=>{ o.style.pointerEvents='none'; if(i===s.correct) o.classList.add('correct'); if(i===oi && oi!==s.correct) o.classList.add('wrong'); });
+  const resultEl=document.getElementById('scResult');
+  resultEl.style.display='block';
+  if(oi===s.correct){ speedScore+=10; resultEl.className='sc-result correct'; resultEl.textContent='✔ إجابة صحيحة — '+s.explain; }
+  else { resultEl.className='sc-result wrong'; resultEl.textContent=(oi===-1?'⏱ انتهى الوقت. ':'✘ إجابة خاطئة. ')+s.explain; }
+  document.getElementById('scLive').textContent = speedScore;
+  setTimeout(()=>{ speedIdx++; showSpeedQuestion(); }, 2200);
+}
+function showSpeedResults(){
+  const max = speedQueue.length*10;
+  document.getElementById('speedBody').innerHTML = `
+    <div class="sc-startcard">
+      <div style="font-size:34px;">🏁</div>
+      <p style="font-size:14px; font-weight:700; color:var(--ink);">النتيجة: ${speedScore} / ${max}</p>
+      <p>${speedScore===max?'ممتاز! سرعة وقرار سليم في كل الحالات.':'راجع التفسيرات وجرّب مرة ثانية لتحسين وقت رد فعلك.'}</p>
+      <button onclick="startSpeedRound()">إعادة المحاولة</button>
+    </div>`;
+}
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(()=>{});
+    });
+  }
+</script>
+</body>
+</html>
